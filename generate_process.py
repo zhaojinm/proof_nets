@@ -45,9 +45,22 @@ def gen(l,folding,primes):
 		#valid lambda node in lcgraph
 		possible_pairs = lc_root.get_possible_pairs()
 		#check still plannar
+		new_prime = primes[l+1]
+		for (plus_d,minus_d) in possible_pairs:
+			#p+m
+			folding = folding.remove(minus)
+			new_node = Node(new_prime,pol=POS,label=get_cur_lable(),left=plus_d,right=minus_d,op='\\')
+			
+
+			#m+p
+			new_node = Node(new_prime,POS,get_cur_lable())
+			lcnode1 = LcNode(new_node)
+			if 
+
 
 		#add lambda node
 		return
+
 	#all none-lambda node
 	for new_prime in [primes[l+1]]:#:
 		new_folding = []

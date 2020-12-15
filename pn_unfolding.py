@@ -1,15 +1,20 @@
 POS="+"
 NEG='-'
-cat = ["(C/C)\\B","B"]
+cat = ["A/((B/C)\\(B/C))","A"]
 pol = [NEG]*(len(cat)-1)+[POS]
 labels = [chr(ord('a')+i) for i in range(len(cat)) ]
 cur_label = labels[-1]
 
 def expand(c,p,l):
+	par=0
 	for i in range(len(c)):
 		ch = c[i]
-		if ch=='/' or ch=='\\' or ch=='(':
+		if (ch=='/' or ch=='\\') and par==0:
 			break
+		elif ch=='(':
+			par+=1
+		elif ch==')':
+			par-=1
 	sep = i
 	if ch=='(':
 		for i in range(len(c)-1,0,-1):
@@ -19,6 +24,7 @@ def expand(c,p,l):
 				break
 	left = c[:sep] if c[0]!="(" else c[1:sep-1]
 	right = c[sep+1:] if c[-1]!=")" else c[sep+2:-1]
+	# print(c,left,right)
 	global cur_label
 	if ch=='\\' and p==POS:
 		cur_label=chr(ord(cur_label) + 2) 
