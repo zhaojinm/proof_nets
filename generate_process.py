@@ -1,5 +1,5 @@
 from nodes import *
-primes = ['A','B','C','D','E','F','G']
+primes = ['A','B','C','D','E','F','G','H','I','J','K','L','M','N']
 cur_label = 0
 def get_cur_lable():
 	global cur_label
@@ -28,41 +28,158 @@ def get_link(folding):
 	unf = []
 	for n in folding:
 		unf+=n.leaf()
-	result = ""
+	result = []
 	# print(folding,unf)
+	# print("leaf",unf)
 	for i,n in enumerate(unf):
 		other = unf.index(n.link)
 		if other>i:
-			result=result+str(i+1)+str(unf.index(n.link)+1)+" "
+			result.append((i+1,other+1))
 	return result
+def check_planar(folding):
+	# print(folding,lc_root)
+	links = get_link(folding)
+	# print(links)
+	for l in links[:-1]:
+		for ll in links[1:]:
+			if ll[0]<l[1] and ll[1]>l[1]:
+				return False
+	return True
+
 
 def gen(l,folding,primes):
 	# print(lc_root,folding,get_link(folding))
-	if l==2:
+	global lc_root
+	if l==6:
 		global all
-		all.add(folding.__str__())
-		print(lc_root,folding,get_link(folding))
+		if check_planar(folding):
+			print(folding,lc_root)
+			# print(lc_root,folding,get_link(folding))
+			all.add(folding.__str__())
+		else:
+			return
 		#valid lambda node in lcgraph
 		possible_pairs = lc_root.get_possible_pairs()
+
+		# for p in possible_pairs:
+		# 	print(p[0].label,p[1].label)
 		#check still plannar
-		new_prime = primes[l+1]
 		for (plus_d,minus_d) in possible_pairs:
-			#p+m
-			folding = folding.remove(minus)
-			new_node = Node(new_prime,pol=POS,label=get_cur_lable(),left=plus_d,right=minus_d,op='\\')
 			
+			plus_dau,minus_dau = plus_d.node,minus_d.node
+			# print()
+			# print("pick:",plus_d.label,minus_d.label)
+			#plus,minus
+			back_folding = folding[:]
+			back_lc_root = lc_root
+			folding.remove(minus_dau)
+			prev_parent = plus_dau.parent
+			# print(folding,plus_dau,minus_dau,prev_parent)
+			new_node = Node(pol=POS,label=get_cur_lable(),left=plus_dau,right=minus_dau,op='\\')
+			new_lcnode=LcNode(new_node,islambda=True)
+			new_lcnode.add_child(plus_d)
+			new_lcnode.add_child(minus_d)
+			plus_d.islambdaplus=True
+
+			if plus_d==lc_root:
+				lc_root=new_lcnode
+				folding.pop(-1)
+				folding.append(new_node)
+			else:
+				plus_d.parent[0].add_child(new_lcnode)
+				plus_d.parent[0].del_child(plus_d)
+				# print("add to",prev_parent)
+				if prev_parent.left==plus_dau:
+					prev_parent.left = new_node
+				else:
+					prev_parent.right = new_node
+				prev_parent.child.remove(plus_dau)
+				prev_parent.child.append(new_node)
+				new_node.parent=prev_parent
+				prev_parent.updatechild_label(plus_dau.label,new_node.label)
+
+			gen(l,folding,primes)
+			#backtrack
+			decrement_label()
+			folding=back_folding
+			plus_d.islambdaplus = False
+			plus_d.parent.remove(new_lcnode)
+			minus_d.parent.remove(new_lcnode)
+			if new_lcnode==lc_root:
+				lc_root=back_lc_root
+				plus_dau.parent=None
+			else:
+				new_lcnode.parent[0].add_child(plus_d)
+				new_lcnode.parent[0].del_child(new_lcnode)
+				if prev_parent.left==new_node:
+					prev_parent.left=plus_dau
+				else:
+					prev_parent.right=plus_dau
+				plus_dau.parent=prev_parent
+				minus_dau.parent=None
+				prev_parent.child.remove(new_node)
+				prev_parent.child.append(plus_dau)
+				new_node.parent=None
+				prev_parent.updatechild_label(new_node.label,plus_dau.label)
 
 			#m+p
-			new_node = Node(new_prime,POS,get_cur_lable())
-			lcnode1 = LcNode(new_node)
-			if 
+			back_folding = folding[:]
+			back_lc_root = lc_root
+			folding.remove(minus_dau)
+			prev_parent = plus_dau.parent
+			# print(folding,plus_dau,minus_dau,prev_parent)
+			new_node = Node(pol=POS,label=get_cur_lable(),left=minus_dau,right=plus_dau,op='/')
+			new_lcnode=LcNode(new_node,islambda=True)
+			new_lcnode.add_child(plus_d)
+			new_lcnode.add_child(minus_d)
+			plus_d.islambdaplus=True
 
+			if plus_d==lc_root:
+				lc_root=new_lcnode
+				folding.pop(-1)
+				folding.append(new_node)
+			else:
+				plus_d.parent[0].add_child(new_lcnode)
+				plus_d.parent[0].del_child(plus_d)
+				# print("add to",prev_parent)
+				if prev_parent.left==plus_dau:
+					prev_parent.left = new_node
+				else:
+					prev_parent.right = new_node
+				prev_parent.child.remove(plus_dau)
+				prev_parent.child.append(new_node)
+				new_node.parent=prev_parent
+				prev_parent.updatechild_label(plus_dau.label,new_node.label)
 
-		#add lambda node
+			gen(l,folding,primes)
+			#backtrack
+			decrement_label()
+			folding=back_folding
+			plus_d.islambdaplus = False
+			plus_d.parent.remove(new_lcnode)
+			minus_d.parent.remove(new_lcnode)
+			if new_lcnode==lc_root:
+				lc_root=back_lc_root
+				plus_dau.parent=None
+			else:
+				new_lcnode.parent[0].add_child(plus_d)
+				new_lcnode.parent[0].del_child(new_lcnode)
+				if prev_parent.left==new_node:
+					prev_parent.left=plus_dau
+				else:
+					prev_parent.right=plus_dau
+				plus_dau.parent=prev_parent
+				minus_dau.parent=None
+				prev_parent.child.remove(new_node)
+				prev_parent.child.append(plus_dau)
+				new_node.parent=None
+				prev_parent.updatechild_label(new_node.label,plus_dau.label)
+
+		
 		return
 
 	#all none-lambda node
-	for new_prime in [primes[l+1]]:#:
+	for new_prime in[primes[l+1]]:#:
 		new_folding = []
 		for i,p in enumerate(folding):
 			if p.pol==NEG:
@@ -79,6 +196,7 @@ def gen(l,folding,primes):
 				# print(p)
 				p.lcnode.parent[0].add_child(lcnode1)
 				new_folding_n = Node(pol=NEG,label=p.label,op='\\',left=new_n1,right=p)
+				p.lcnode.node=new_folding_n
 				new_folding_n.lcnode=p.lcnode
 				ori,des = p.label,p.label+new_n1.label
 				new_folding_n.updatechild_label(ori,des)
@@ -91,6 +209,9 @@ def gen(l,folding,primes):
 				p.lcnode.parent[0].del_child(lcnode1)
 				new_folding_n.updatechild_label(des,ori)
 				p.parent=None
+				p.lcnode.node=p
+
+
 				#add to right
 				new_folding = folding[:i]
 				new_n1 = Node(new_prime,POS,get_cur_lable())
@@ -101,6 +222,7 @@ def gen(l,folding,primes):
 				lcnode1.add_child(lcnode2)
 				p.lcnode.parent[0].add_child(lcnode1)
 				new_folding_n = Node(pol=NEG,label=p.label,op='/',left=p,right=new_n1)
+				p.lcnode.node=new_folding_n
 				new_folding_n.lcnode=p.lcnode
 				ori,des = p.label,p.label+new_n1.label
 				new_folding_n.updatechild_label(ori,des)
@@ -113,6 +235,7 @@ def gen(l,folding,primes):
 				p.lcnode.parent[0].del_child(lcnode1)
 				new_folding_n.updatechild_label(des,ori)
 				p.parent=None
+				p.lcnode.node=p
 
 
 gen(0,folding,primes)

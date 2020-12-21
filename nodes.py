@@ -34,6 +34,19 @@ class Node():
 				self.right.updatechild_label(ori,des)
 	def __str__(self):
 		if self.op==None:
+			return self.cat
+		else:
+			left_s = self.left.__str__()
+			right_s = self.right.__str__()
+			if self.left.op!=None:
+				left_s='('+left_s+')'
+			if self.right.op!=None:
+				right_s='('+right_s+')'
+			if self.pol=="+":
+				return right_s+self.op+left_s
+			return left_s+self.op+right_s
+	def __str__1(self):
+		if self.op==None:
 			return self.cat+self.pol+self.label
 		else:
 			left_s = self.left.__str__()
@@ -64,7 +77,7 @@ class LcNode():
 	def __str__(self):
 		result=""
 		if self.child!=[]:
-			result = self.label + "=" + "".join([c.label for c in self.child])
+			result = self.label + "=" + "".join([c.label for c in self.child])+" "
 			for c in self.child:
 				result = result + c.__str__()+ " "
 		return result
@@ -83,6 +96,8 @@ class LcNode():
 		if self.child!=[]:
 			plus=self
 			leaf = self.get_leaf()
+			if sum([int(len(l.parent)<=1) for l in leaf])<=1:
+				return result
 			for l in leaf:
 				if len(l.parent)==1:
 					for ll in leaf:
